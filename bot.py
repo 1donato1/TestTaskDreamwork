@@ -4,20 +4,64 @@ import asyncio
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters.command import Command
 
+from aiogram.filters.command import CommandObject
+
+
+import config as cfg
 
 class BotMethods:
     '''
     Contains instructions that process various events.
     '''
+
+    def validate_traking_channel(self,channel):
+        if channel[0:5] != 't.me/':
+            raise ValueError('Channel must start on t.me/')
+
+
+    
     def load_all_dp(self):
+
         @self.dp.message(Command("test1"))
         async def cmd_test1(message: types.Message):
             await message.reply("Test 1")
 
+
+        # print all
         @self.dp.message(Command("test2"))
-        async def cmd_test1(message: types.Message):
-            await message.reply("Test 2")
-    
+        async def cmd(message: types.Message):
+            counter = 1
+            for i in cfg.traking_channels:
+                
+                await message.answer(f'{counter} : {i}')
+                counter += 1
+
+        # add new
+        @self.dp.message(Command('test3'))
+        async def cmd(message: types.Message, command : CommandObject):
+            
+            args = command.args.split()
+            new_channel = args[0].replace('https://','')
+            try:
+                self.validate_traking_channel(new_channel)
+                cfg.traking_channels.append(new_channel)
+                await message.answer(f'New channel in list : {new_channel}')
+            except:
+                await message.answer('Некоректний ввід!')
+
+        # delete
+        @self.dp.message(Command('test4'))
+        async def cmd(message: types.Message, command : CommandObject):
+            
+            args = command.args.split()
+            print(args)
+            try:
+                del cfg.traking_channels[int(args[0])-1]
+            except:
+                await message.answer(f'Невдалося видалити позицію {args[0]}')
+
+        
+
 
 class BotStart(BotMethods):
 
